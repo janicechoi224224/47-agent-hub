@@ -293,9 +293,28 @@
   </script>
   <script>
   const DATA = window.__KB_DATA__;
-  const isVisibleItem = (it={}) => String(it.desc || '').trim() !== '内容待补充';
-  DATA.items = (DATA.items || []).filter(isVisibleItem);
-  DATA.newItems = (DATA.newItems || []).filter(isVisibleItem);
+  const normalizeKey = (s='') => String(s || '').trim();
+  const isInvalidDesc = (desc='') => {
+    const text = normalizeKey(desc);
+    return !text || /^内容待补充[。！!…\s]*$/.test(text);
+  };
+  const sanitizeItems = (items=[]) => {
+    const seenUrls = new Set();
+    const seenTitles = new Set();
+    return items.filter(it => {
+      if(isInvalidDesc(it.desc)) return false;
+      const urlKey = normalizeKey(it.url);
+      const titleKey = normalizeKey(it.title);
+      if(urlKey && seenUrls.has(urlKey)) return false;
+      if(titleKey && seenTitles.has(titleKey)) return false;
+      if(urlKey) seenUrls.add(urlKey);
+      if(titleKey) seenTitles.add(titleKey);
+      return true;
+    });
+  };
+  DATA.items = sanitizeItems(DATA.items || []);
+  const itemKeys = new Set(DATA.items.map(it => `${normalizeKey(it.url)}__${normalizeKey(it.title)}__${normalizeKey(it.sheet)}`));
+  DATA.newItems = (DATA.newItems || []).filter(it => itemKeys.has(`${normalizeKey(it.url)}__${normalizeKey(it.title)}__${normalizeKey(it.sheet)}`));
   DATA.tabs = (DATA.tabs || [])
     .map(tab => ({ ...tab, count: DATA.items.filter(it => it.sheet === tab.name).length }))
     .filter(tab => tab.count > 0);
