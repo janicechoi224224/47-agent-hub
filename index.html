@@ -95,6 +95,9 @@
   .clear-btn{border:0;cursor:pointer;background:linear-gradient(135deg,var(--sky),var(--sky-deep));color:#fff;border-radius:10px;padding:6px 12px;font-weight:800;font-size:12px;}
   .clear-btn:hover{transform:translateY(-1px);}
 
+  .feedback-jump-btn{border:0;cursor:pointer;display:inline-flex;align-items:center;gap:7px;border-radius:12px;padding:10px 13px;font-weight:900;font-size:13px;color:#fff;background:linear-gradient(135deg,#7c5cff,#4aa8ff);box-shadow:0 12px 24px rgba(124,92,255,.18);transition:.2s ease;white-space:nowrap;}
+  .feedback-jump-btn:hover{transform:translateY(-2px);}
+
   .sheet-hero{background:rgba(255,255,255,.78);border:1px solid rgba(255,255,255,.9);box-shadow:var(--shadow);border-radius:28px;padding:22px 24px;}
   .sheet-hero h2{margin-bottom:10px;}
   .sheet-meta{color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;font-size:14px;}
@@ -484,6 +487,7 @@
               <select id="majorSelect">${majorOpts}</select></div>
             <div class="select-box"><span class="inline-icon" aria-hidden="true">🏷️</span>
               <select id="subSelect">${subOpts}</select></div>
+            <button id="feedbackJumpBtn" class="feedback-jump-btn" type="button"><span class="inline-icon" aria-hidden="true">💬</span>问题反馈入口</button>
             <div class="filter-search"><span class="inline-icon" aria-hidden="true">🔎</span>
               <input id="searchInput" type="search" placeholder="全文检索：输入问题或关键词，如：直播线索怎么投、返点申诉、素材诊断…" value="${escapeHtml(state.query)}" autocomplete="off" />
               <button id="clearBtn" class="clear-btn" style="${state.query?'':'display:none;'}">清除</button></div>
@@ -506,6 +510,9 @@
     const si=$('searchInput'), cb=$('clearBtn');
     si.addEventListener('input', e=>{ state.query=e.target.value.trim(); refreshList(); });
     cb.addEventListener('click', ()=>{ state.query=''; si.value=''; refreshList(); si.focus(); });
+
+    const fb=$('feedbackJumpBtn');
+    if(fb) fb.addEventListener('click', ()=> $('feedbackSection').scrollIntoView({behavior:'smooth'}));
   }
 
   function refreshList(){
