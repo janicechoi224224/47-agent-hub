@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="build-version" content="2026-07-16-stable-v2" />
   <title>代理知识库一本通｜可视化导航</title>
   <style>
   :root{
@@ -312,17 +316,30 @@
       return true;
     });
   };
-  const displayItems = sanitizeItems(RAW_DATA.items || []);
+  const rawItems = Array.isArray(RAW_DATA.items) ? RAW_DATA.items : [];
+  let displayItems = [];
+  try { displayItems = sanitizeItems(rawItems); } catch(e) { console.error('[KB] sanitize failed, fallback to raw', e); displayItems = rawItems.slice(); }
+  // 关键容错：任何情况下都保证至少能显示一批资料，避免"内容全部消失"
+  if(!displayItems.length && rawItems.length){
+    console.warn('[KB] sanitize emptied all items, fallback to raw items');
+    displayItems = rawItems.slice();
+  }
   const itemKeys = new Set(displayItems.map(it => `${normalizeKey(it.url)}__${normalizeKey(it.title)}__${normalizeKey(it.sheet)}`));
-  const displayNewItems = (RAW_DATA.newItems || []).filter(it => itemKeys.has(`${normalizeKey(it.url)}__${normalizeKey(it.title)}__${normalizeKey(it.sheet)}`));
-  const displayTabs = (RAW_DATA.tabs || [])
+  const displayNewItems = ((RAW_DATA.newItems) || []).filter(it => itemKeys.has(`${normalizeKey(it.url)}__${normalizeKey(it.title)}__${normalizeKey(it.sheet)}`));
+  let displayTabs = (RAW_DATA.tabs || [])
     .map(tab => ({ ...tab, count: displayItems.filter(it => it.sheet === tab.name).length }))
     .filter(tab => tab.count > 0);
+  // 容错：若 tabs 计算异常（如 sheet 字段不一致），退回到原始 tabs 元数据
+  if(!displayTabs.length && (RAW_DATA.tabs || []).length){
+    console.warn('[KB] displayTabs empty, fallback to raw tabs');
+    displayTabs = (RAW_DATA.tabs || []).slice();
+  }
   const DATA = {
     ...RAW_DATA,
     items: displayItems,
     newItems: displayNewItems,
     tabs: displayTabs,
+    majorOrder: (RAW_DATA.majorOrder && RAW_DATA.majorOrder.length) ? RAW_DATA.majorOrder : ['品牌','效果','星图','云图','通用'],
     metadata: {
       ...(RAW_DATA.metadata || {}),
       total_links: displayItems.length,
@@ -661,7 +678,8 @@
     catch(err){ window.location.href = u; }
   });
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDrawer(); });
-  $('scrollToTabs').addEventListener('click', ()=> $('knowledgeTabs').scrollIntoView({behavior:'smooth'}));
+  const _scrollToTabsBtn = $('scrollToTabs');
+  if(_scrollToTabsBtn) _scrollToTabsBtn.addEventListener('click', ()=> { const t = $('knowledgeTabs'); if(t) t.scrollIntoView({behavior:'smooth'}); });
 
   /* ---------- feedback ---------- */
   const FEEDBACK_WEBHOOK = 'https://open.larkoffice.com/open-apis/bot/v2/hook/240aac36-f8ea-4d7b-b69e-acfaa6739780'; // 飞书群机器人 Webhook：代理知识库问题反馈
@@ -696,7 +714,32 @@
   });
 
   /* ---------- init ---------- */
-  renderHeader(); renderWeekly(); renderTabs(); renderContent();
+  function safeBoot(){
+    try{
+      renderHeader(); renderWeekly(); renderTabs(); renderContent();
+    }catch(err){
+      console.error('[KB] boot failed', err);
+      try{
+        const ca = document.getElementById('contentArea');
+        if(ca){
+          ca.innerHTML = `<div class="empty-state" style="padding:32px;line-height:1.8;">
+            页面初次加载出现异常，可能是网络中断或缓存过期。<br/>
+            建议操作：<b>强制刷新（Cmd/Ctrl+Shift+R）</b> 或 <a href="${location.pathname}?t=${Date.now()}" style="color:#147bd1;font-weight:700;">点这里带最新时间戳重新打开</a>。<br/>
+            如仍无法显示内容，请复制以下错误信息反馈给 @蔡思淇：<br/>
+            <code style="display:block;margin-top:8px;padding:10px;background:#fff5f5;border-radius:8px;color:#b02a37;word-break:break-all;">${String(err && err.message || err)}</code>
+          </div>`;
+        }
+      }catch(e2){ /* ignore */ }
+    }
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', safeBoot);
+  } else {
+    safeBoot();
+  }
+  window.addEventListener('error', function(e){
+    console.error('[KB] window error', e.message, e.filename, e.lineno);
+  });
   </script>
 </body>
 </html>
