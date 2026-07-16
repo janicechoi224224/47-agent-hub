@@ -293,6 +293,14 @@
   </script>
   <script>
   const DATA = window.__KB_DATA__;
+  const isVisibleItem = (it={}) => String(it.desc || '').trim() !== '内容待补充';
+  DATA.items = (DATA.items || []).filter(isVisibleItem);
+  DATA.newItems = (DATA.newItems || []).filter(isVisibleItem);
+  DATA.tabs = (DATA.tabs || [])
+    .map(tab => ({ ...tab, count: DATA.items.filter(it => it.sheet === tab.name).length }))
+    .filter(tab => tab.count > 0);
+  DATA.metadata.total_links = DATA.items.length;
+  DATA.metadata.sheet_count = DATA.tabs.length;
   const MAJOR_THEME = {
     '品牌': { color:'#7c5cff', emoji:'🎬' },
     '效果': { color:'#17a673', emoji:'📈' },
