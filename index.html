@@ -638,11 +638,12 @@
     if(!payload.content){ status.textContent='请先填写反馈内容再提交哦。'; $('feedbackContent').focus(); return; }
     const text = `【代理知识库反馈】\n反馈类型：${payload.type}\n姓名/公司：${payload.name}\n反馈内容：${payload.content}\n页面：${payload.page}\n时间：${payload.time}`;
     try{
+      const webhookBody = { msg_type:'text', content:{ text } };
       await fetch(FEEDBACK_WEBHOOK, {
         method:'POST',
         mode:'no-cors',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({text, ...payload})
+        headers:{'Content-Type':'text/plain;charset=UTF-8'},
+        body:JSON.stringify(webhookBody)
       });
       status.textContent='已推送到飞书群';
       $('feedbackForm').reset();
