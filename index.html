@@ -232,7 +232,7 @@
         <div class="feedback-copy">
           <p class="section-kicker">FEEDBACK ENTRANCE</p>
           <h2>资料更新 & 问题反馈入口</h2>
-          <p>如果代理伙伴找不到想要的产品信息、发现内容需要纠错，或希望补充新的产品资料，可以在这里直接提交。当前为静态网页版本，提交后会自动打开邮件草稿发送给负责人。</p>
+          <p>如果代理伙伴找不到想要的产品信息、发现内容需要纠错，或希望补充新的产品资料，可以在这里直接提交。提交后会直接推送到飞书群「代理知识库问题反馈」，方便我们第一时间跟进。</p>
           <div class="feedback-tags">
             <span>产品信息更新</span><span>内容纠错</span><span>新增需求</span><span>其他建议</span>
           </div>
@@ -256,7 +256,7 @@
             <textarea id="feedbackContent" name="content" required placeholder="请描述想更新/新增/纠错的产品资料，最好附上关键词、产品名或相关链接。"></textarea>
           </div>
           <button class="feedback-submit" type="submit">提交反馈</button>
-          <p class="feedback-status" id="feedbackStatus">提交后会通过邮件发送给 @蔡思淇；如后续接入飞书 Webhook，可无感切换为在线提交。</p>
+          <p class="feedback-status" id="feedbackStatus">提交后将直接推送到飞书群「代理知识库问题反馈」。</p>
         </form>
       </div>
     </section>
@@ -621,7 +621,7 @@
   $('scrollToTabs').addEventListener('click', ()=> $('knowledgeTabs').scrollIntoView({behavior:'smooth'}));
 
   /* ---------- feedback ---------- */
-  const FEEDBACK_WEBHOOK = ''; // 如后续有飞书 Webhook，可填入后自动改为在线提交。
+  const FEEDBACK_WEBHOOK = 'https://open.larkoffice.com/open-apis/bot/v2/hook/240aac36-f8ea-4d7b-b69e-acfaa6739780'; // 飞书群机器人 Webhook：代理知识库问题反馈
   function buildFeedbackPayload(){
     return {
       name: $('feedbackName').value.trim() || '未填写',
@@ -637,17 +637,18 @@
     const status = $('feedbackStatus');
     if(!payload.content){ status.textContent='请先填写反馈内容再提交哦。'; $('feedbackContent').focus(); return; }
     const text = `【代理知识库反馈】\n反馈类型：${payload.type}\n姓名/公司：${payload.name}\n反馈内容：${payload.content}\n页面：${payload.page}\n时间：${payload.time}`;
-    if(FEEDBACK_WEBHOOK){
-      try{
-        await fetch(FEEDBACK_WEBHOOK, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text, ...payload})});
-        status.textContent='已提交反馈，感谢补充！';
-        $('feedbackForm').reset(); return;
-      }catch(err){ status.textContent='在线提交暂不可用，已为你打开邮件草稿。'; }
+    try{
+      await fetch(FEEDBACK_WEBHOOK, {
+        method:'POST',
+        mode:'no-cors',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({text, ...payload})
+      });
+      status.textContent='已推送到飞书群';
+      $('feedbackForm').reset();
+    }catch(err){
+      status.textContent='推送失败，请稍后再试或联系 @蔡思淇。';
     }
-    const subject = encodeURIComponent(`代理知识库反馈 - ${payload.type}`);
-    const body = encodeURIComponent(text);
-    window.location.href = `mailto:szekeichoi@bytedance.com?subject=${subject}&body=${body}`;
-    status.textContent='已打开邮件草稿，请确认发送；如果浏览器未唤起邮箱，可复制反馈内容发给 @蔡思淇。';
   });
 
   /* ---------- init ---------- */
