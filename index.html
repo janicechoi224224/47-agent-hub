@@ -917,11 +917,14 @@ poi（抖音门店）认领教程（对外版）","url":"https://bytedance.larko
   </script>
   <script>
   const parseKbData = () => {
-    if (window.__KB_DATA__) return window.__KB_DATA__;
+    // Prefer the plain embedded JSON block because the legacy base64 bootstrap can mojibake UTF-8 text on some browsers.
+    // Keep window.__KB_DATA__ only as a final fallback.
+
     const embedded = document.getElementById('kb-data-json');
     if (embedded && embedded.textContent.trim()) {
       try { return JSON.parse(embedded.textContent); } catch (err) { console.warn('[KB] embedded JSON fallback parse failed', err); }
     }
+    if (window.__KB_DATA__) return window.__KB_DATA__;
     return {};
   };
   const RAW_DATA = parseKbData();
