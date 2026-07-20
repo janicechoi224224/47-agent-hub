@@ -134,11 +134,14 @@
   .sheet-hero h2{margin-bottom:10px;}
   .sheet-meta{color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;font-size:14px;}
 
-  .category-block{background:rgba(255,255,255,.72);border:1px solid var(--line);border-radius:26px;padding:20px;}
+  .group-list{display:grid;gap:18px;}
+  .category-block{background:rgba(255,255,255,.72);border:1px solid var(--line);border-radius:26px;padding:20px;box-shadow:0 10px 26px rgba(30,126,204,.06);}
+  .category-block.single-group{padding-top:18px;}
   .category-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
   .category-head .cat-left{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;}
   .category-head h3{margin:0;font-size:19px;}
   .major-chip{font-size:12px;font-weight:800;color:#fff;padding:4px 10px;border-radius:999px;}
+  .group-divider{height:1px;background:linear-gradient(90deg,rgba(74,168,255,.22),rgba(124,92,255,.08),transparent);margin-top:14px;}
   .pill{display:inline-flex;align-items:center;padding:7px 11px;border-radius:999px;color:var(--sky-deep);background:var(--sky-soft);font-size:13px;font-weight:800;}
   .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
   .resource-card{min-height:150px;display:flex;flex-direction:column;justify-content:space-between;gap:12px;background:linear-gradient(180deg,#fff 0%,#f8fcff 100%);border:1px solid rgba(62,150,225,.16);border-radius:22px;padding:18px;cursor:pointer;color:var(--ink);transition:.22s ease;position:relative;overflow:hidden;}
@@ -390,6 +393,7 @@
       sheet_count: displayTabs.length,
     },
   };
+  const GROUP_ORDER = ['品牌','线索','云图','本地','星图','通用'];
   const MAJOR_THEME = {
     '品牌': { color:'#7c5cff', emoji:'🎬' },
     '线索': { color:'#17a673', emoji:'📈' },
@@ -551,7 +555,7 @@
   function escapeRegExp(s=''){ return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
   function availableMajors(){
     const scope=scopeItems(); const set=new Set(scope.map(i=>i.major));
-    return DATA.majorOrder.filter(m=>set.has(m));
+    return GROUP_ORDER.filter(m=>set.has(m));
   }
   function availableSubs(){
     let scope=scopeItems();
@@ -632,25 +636,34 @@
   function renderList(items){
     if(!items.length) return `<div class="empty-state">没有找到匹配资料，换个关键词或筛选条件试试。</div>`;
     const groups={};
-    items.forEach(it=>{ const k=it.major+'|'+it.sub; (groups[k]=groups[k]||[]).push(it); });
-    const keys=Object.keys(groups).sort((a,b)=>{
-      const ma=a.split('|')[0], mb=b.split('|')[0];
-      const d=DATA.majorOrder.indexOf(ma)-DATA.majorOrder.indexOf(mb);
-      return d!==0?d:a.localeCompare(b,'zh-CN');
+    items.forEach(it=>{
+      const k=it.tab || it.major || '通用';
+      (groups[k]=groups[k]||[]).push(it);
     });
-    return keys.map(k=>{
-      const list=groups[k]; const [maj,sub]=k.split('|'); const th=themeOf(maj);
-      return `<section class="category-block">
+    const activeGroup = state.activeTab==='all' ? '' : state.activeTab;
+    const keys = GROUP_ORDER.filter(k=>groups[k] && groups[k].length);
+    return `<div class="group-list">${keys.map((k, idx)=>{
+      const list=groups[k].slice().sort((a,b)=>{
+        const subDiff = String(a.sub||'').localeCompare(String(b.sub||''),'zh-CN');
+        if(subDiff!==0) return subDiff;
+        const rowDiff = (Number(a.row)||0) - (Number(b.row)||0);
+        if(rowDiff!==0) return rowDiff;
+        return String(a.title||'').localeCompare(String(b.title||''),'zh-CN');
+      });
+      const th=themeOf(k);
+      const title = state.activeTab==='all' ? `${th.emoji} ${k}` : `${th.emoji} ${k}`;
+      return `<section class="category-block ${activeGroup ? 'single-group' : ''}">
         <div class="category-head">
           <div class="cat-left">
-            <span class="major-chip" style="background:${th.color}">${th.emoji} ${escapeHtml(maj)}</span>
-            <h3>${escapeHtml(sub)}</h3>
+            <span class="major-chip" style="background:${th.color}">📌 大分类</span>
+            <h3>${escapeHtml(title)}</h3>
           </div>
-          <span class="pill">${list.length} 个入口</span>
+          <span class="pill">${list.length} 份资料</span>
         </div>
         <div class="card-grid">${list.map(renderCard).join('')}</div>
+        ${idx<keys.length-1 ? '<div class="group-divider"></div>' : ''}
       </section>`;
-    }).join('');
+    }).join('')}</div>`;
   }
 
   function renderCard(it){
