@@ -128,6 +128,9 @@
   .filter-search:focus-within{border-color:var(--sky);box-shadow:0 0 0 4px rgba(74,168,255,.16);background:#fff;}
   .filter-search .inline-icon{color:var(--sky-deep);}
   .filter-search input{flex:1;border:0;outline:0;background:transparent;color:var(--ink);font-size:15px;font-family:inherit;}
+  .select-group{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;flex:0 0 auto;}
+  .select-group .select-box{min-width:150px;flex:0 0 auto;}
+  .select-sep{color:var(--sky-deep);font-weight:800;opacity:.6;}
   .select-box{display:flex;align-items:center;gap:8px;min-width:170px;background:#f6fbff;border:1px solid var(--line);border-radius:14px;padding:10px 13px;}
   .select-box .inline-icon{color:var(--sky-deep);}
   .select-box select{width:100%;outline:none;border:0;background:transparent;color:var(--ink);font-size:14px;font-family:inherit;cursor:pointer;}
@@ -555,10 +558,13 @@
             <span class="filter-count">${items.length} / ${tabTotal}</span>
           </div>
           <div class="filter-controls">
-            <div class="select-box"><span class="inline-icon" aria-hidden="true">🗂️</span>
-              <select id="majorSelect">${majorOpts}</select></div>
-            <div class="select-box"><span class="inline-icon" aria-hidden="true">🏷️</span>
-              <select id="subSelect">${subOpts}</select></div>
+            <div class="select-group">
+              <div class="select-box"><span class="inline-icon" aria-hidden="true">🗂️</span>
+                <select id="majorSelect">${majorOpts}</select></div>
+              <span class="select-sep" aria-hidden="true">·</span>
+              <div class="select-box"><span class="inline-icon" aria-hidden="true">🏷️</span>
+                <select id="subSelect">${subOpts}</select></div>
+            </div>
             <button id="feedbackJumpBtn" class="feedback-jump-btn" type="button"><span class="inline-icon" aria-hidden="true">💬</span>问题反馈入口</button>
             <div class="filter-search"><span class="inline-icon" aria-hidden="true">🔎</span>
               <input id="searchInput" type="search" placeholder="全文检索：输入问题或关键词，如：直播线索怎么投、返点申诉、素材诊断…" value="${escapeHtml(state.query)}" autocomplete="off" />
@@ -609,8 +615,13 @@
     items.forEach(it=>{ const k=it.major+'|'+it.sub; (groups[k]=groups[k]||[]).push(it); });
     const keys=Object.keys(groups).sort((a,b)=>{
       const ma=a.split('|')[0], mb=b.split('|')[0];
+      const sa=a.split('|')[1], sb=b.split('|')[1];
       const d=DATA.majorOrder.indexOf(ma)-DATA.majorOrder.indexOf(mb);
-      return d!==0?d:a.localeCompare(b,'zh-CN');
+      if(d!==0) return d;
+      const OPEN_SUB='开机位/开屏/TopView/FirstView';
+      const pa=(sa===OPEN_SUB)?0:1, pb=(sb===OPEN_SUB)?0:1;
+      if(pa!==pb) return pa-pb;
+      return a.localeCompare(b,'zh-CN');
     });
     return keys.map(k=>{
       const list=groups[k]; const [maj,sub]=k.split('|'); const th=themeOf(maj);
