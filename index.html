@@ -123,14 +123,14 @@
   .filter-title .inline-icon{font-size:20px;}
   .filter-scope{color:var(--ink);}
   .filter-count{background:var(--sky-soft);color:var(--sky-deep);padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;}
-  .filter-controls{display:flex;align-items:center;gap:10px;flex:1 1 620px;justify-content:flex-end;flex-wrap:wrap;}
+  .filter-controls{display:flex;align-items:center;gap:10px;flex:1 1 620px;justify-content:flex-start;flex-wrap:wrap;}
   .filter-search{display:flex;align-items:center;gap:9px;flex:1 1 260px;min-width:220px;background:#f6fbff;border:1px solid var(--line);border-radius:14px;padding:10px 13px;transition:.2s ease;}
   .filter-search:focus-within{border-color:var(--sky);box-shadow:0 0 0 4px rgba(74,168,255,.16);background:#fff;}
   .filter-search .inline-icon{color:var(--sky-deep);}
   .filter-search input{flex:1;border:0;outline:0;background:transparent;color:var(--ink);font-size:15px;font-family:inherit;}
-  .select-group{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;flex:0 0 auto;}
-  .select-group .select-box{min-width:150px;flex:0 0 auto;}
-  .select-sep{color:var(--sky-deep);font-weight:800;opacity:.6;}
+  .select-group{display:inline-flex;align-items:center;gap:8px;flex-wrap:nowrap;flex:0 0 auto;white-space:nowrap;background:#f6fbff;border:1px solid var(--line);border-radius:16px;padding:4px 8px;}
+  .select-group .select-box{min-width:150px;flex:0 0 auto;background:transparent;border:none;border-radius:12px;padding:6px 8px;}
+  .select-sep{color:var(--sky-deep);font-weight:800;opacity:.6;flex:0 0 auto;}
   .select-box{display:flex;align-items:center;gap:8px;min-width:170px;background:#f6fbff;border:1px solid var(--line);border-radius:14px;padding:10px 13px;}
   .select-box .inline-icon{color:var(--sky-deep);}
   .select-box select{width:100%;outline:none;border:0;background:transparent;color:var(--ink);font-size:14px;font-family:inherit;cursor:pointer;}
@@ -616,11 +616,11 @@
     const keys=Object.keys(groups).sort((a,b)=>{
       const ma=a.split('|')[0], mb=b.split('|')[0];
       const sa=a.split('|')[1], sb=b.split('|')[1];
-      const d=DATA.majorOrder.indexOf(ma)-DATA.majorOrder.indexOf(mb);
-      if(d!==0) return d;
       const OPEN_SUB='开机位/开屏/TopView/FirstView';
       const pa=(sa===OPEN_SUB)?0:1, pb=(sb===OPEN_SUB)?0:1;
       if(pa!==pb) return pa-pb;
+      const d=DATA.majorOrder.indexOf(ma)-DATA.majorOrder.indexOf(mb);
+      if(d!==0) return d;
       return a.localeCompare(b,'zh-CN');
     });
     return keys.map(k=>{
