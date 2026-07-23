@@ -14,7 +14,7 @@
   /* 自动缓存破除：每次部署新版本时，浏览器只要打开一次就会自动 reload 到带最新版本号的 URL，避免 GitHub Pages / CDN / 本地浏览器把旧 HTML 缓存下来导致"内容消失" */
   (function(){
     try {
-      var VER = '2026-07-22-cachefix-v1';
+      var VER = '2026-07-23-title-pr-fix-v2';
       var STORAGE_KEY = 'kb_agent_hub_ver';
       var seen = null;
       try { seen = localStorage.getItem(STORAGE_KEY); } catch(_) { seen = null; }
